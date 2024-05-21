@@ -22,8 +22,8 @@
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
     "@types/node": "^20.12.12",
-    "typescript": "^5.4.5",
-    "electron": "^30.0.6"
+    "electron": "30.0.6",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"
