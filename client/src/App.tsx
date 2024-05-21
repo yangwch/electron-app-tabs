@@ -1,11 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   UploadOutlined,
   UserOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
-import { Layout, Menu, Tabs } from "antd";
+import { Layout, Tabs, Tree } from "antd";
 import styled from "styled-components";
+import {
+  activateTabPage,
+  closeTabPage,
+  openTabPage,
+  resizeTabPage,
+} from "./services/ipc";
+import { MenuItemType } from "antd/es/menu/hooks/useItems";
+import { throttle } from "lodash";
 
 const { Sider, Content } = Layout;
 
@@ -32,28 +40,117 @@ const TabsContent = styled.div`
   position: relative;
 `;
 
+const TabsHeader = styled.div`
+  height: 45px;
+  overflow: hidden;
+  flex-shrink: 0;
+`;
+
+interface LinkMenu extends MenuItemType {
+  url: string;
+  group: string;
+  label: string;
+  children?: LinkMenu[];
+}
+
+const menus: LinkMenu[] = [
+  {
+    key: "https://www.eeo.cn",
+    icon: <UserOutlined />,
+    label: "EEO",
+    group: "eeo",
+    url: "https://www.eeo.cn",
+    children: [
+      {
+        key: "https://www.eeo.cn/cn/classin",
+        url: "https://www.eeo.cn/cn/classin",
+        label: "ClassIn",
+        group: "eeo",
+      },
+      {
+        key: "https://www.eeo.cn/cn/colleges-universities",
+        url: "https://www.eeo.cn/cn/colleges-universities",
+        group: "eeo",
+        label: "高校",
+      },
+    ],
+  },
+  {
+    key: "https://flowin.cn",
+    icon: <UserOutlined />,
+    label: "FlowIn",
+    url: "https://flowin.cn",
+    group: "flowin",
+  },
+
+  {
+    key: "https://www.electronjs.org",
+    icon: <VideoCameraOutlined />,
+    label: "Electron",
+    url: "https://www.electronjs.org",
+    group: "electron",
+  },
+  {
+    key: "https://cn.bing.com",
+    icon: <UploadOutlined />,
+    label: "Bing",
+    url: "https://cn.bing.com",
+    group: "bing",
+  },
+];
+
 const App: React.FC = () => {
   const [openedTabs, setOpenedTabs] = useState<
-    { key: string; label: string; children: React.ReactNode }[]
+    { key: string; label: string; menuKey: string; children: React.ReactNode }[]
   >([]);
   const [currentTab, setCurrentTab] = useState<string>("");
 
-  const onClickMenu = (info: unknown) => {
+  const contentRef = React.useRef<HTMLDivElement>(null);
+
+  const onClickMenu = (e: React.MouseEvent, info: LinkMenu) => {
     console.log("click", info);
     if (info) {
-      const menuInfo = info as { key: string };
-      if (openedTabs.find(tab => tab.key === menuInfo.key)) {
-        setCurrentTab(menuInfo.key);
+      const currentNode = info;
+      const group = currentNode.group;
+      if (openedTabs.find(tab => tab.key === group)) {
+        setCurrentTab(group);
+        setOpenedTabs(prev =>
+          prev.map(tab => {
+            if (tab.key === group) {
+              return {
+                ...tab,
+                label: currentNode.label,
+                menuKey: String(currentNode.key),
+                children: null,
+              };
+            }
+            return tab;
+          }),
+        );
       } else {
         setOpenedTabs(prev => [
           ...prev,
           {
-            key: menuInfo.key,
-            label: menuInfo.key,
+            key: group,
+            label: currentNode.label,
+            menuKey: String(currentNode.key),
             children: null,
           },
         ]);
-        setCurrentTab(menuInfo.key);
+        setCurrentTab(group);
+      }
+      if (contentRef.current) {
+        const bounce = contentRef.current.getBoundingClientRect();
+        openTabPage(
+          currentNode.url,
+          {
+            left: bounce.left,
+            top: bounce.top,
+            width: bounce.width,
+            height: bounce.height,
+          },
+          currentNode.group,
+        );
       }
     }
   };
@@ -63,62 +160,77 @@ const App: React.FC = () => {
   ) => {
     if (action === "remove") {
       setOpenedTabs(prev => prev.filter(tab => tab.key !== targetKey));
-      setCurrentTab(prev => {
-        if (prev === targetKey) {
-          return openedTabs[0].key;
-        }
-        return prev;
-      });
+
+      closeTabPage(targetKey as string);
+      const newCurrent =
+        openedTabs.find(tab => tab.key !== targetKey)?.key || "";
+      setCurrentTab(newCurrent);
+      if (newCurrent) {
+        activateTabPage(newCurrent);
+      }
     }
   };
+
+  const onChange = (key: string) => {
+    setCurrentTab(key);
+    activateTabPage(key);
+  };
+
+  useEffect(() => {
+    if (contentRef.current) {
+      const throttledResize = throttle(() => {
+        if (contentRef.current) {
+          const bounce = contentRef.current.getBoundingClientRect();
+          const { left, top, width, height } = bounce;
+          resizeTabPage({
+            left,
+            top,
+            width,
+            height,
+          });
+        }
+      }, 100);
+      const resizeObserve = new ResizeObserver(() => {
+        throttledResize();
+      });
+      resizeObserve.observe(contentRef.current);
+      return () => {
+        resizeObserve.disconnect();
+        throttledResize.cancel();
+      };
+    }
+  }, []);
+
+  const activeMenuKey = useMemo(() => {
+    return openedTabs.find(tab => tab.key === currentTab)?.menuKey || ""
+  }, [openedTabs, currentTab])
   return (
     <Layout style={{ width: "100%", height: "100%" }}>
-      <Sider trigger={null}>
+      <Sider trigger={null} style={{ backgroundColor: "#fff", padding: 20 }}>
         <div className="demo-logo-vertical" />
-        <Menu
-          theme="dark"
-          mode="inline"
-          defaultSelectedKeys={["1"]}
+        <Tree
+          treeData={menus}
           onClick={onClickMenu}
-          selectedKeys={[currentTab]}
-          items={[
-            {
-              key: "https://flowin.cn",
-              icon: <UserOutlined />,
-              label: "FlowIn",
-            },
-
-            {
-              key: "https://www.eeo.cn",
-              icon: <UserOutlined />,
-              label: "Classin",
-            },
-            {
-              key: "https://www.electronjs.org",
-              icon: <VideoCameraOutlined />,
-              label: "Electron",
-            },
-            {
-              key: "https://cn.bing.com",
-              icon: <UploadOutlined />,
-              label: "Bing",
-            },
-          ]}
+          titleRender={node => node.label}
+          selectedKeys={[activeMenuKey]}
+          blockNode
         />
       </Sider>
       <Layout>
         <Content style={{ padding: "0 24px" }}>
           <TabsContainer>
-            <Tabs
-              type="editable-card"
-              items={openedTabs}
-              activeKey={currentTab}
-              onChange={key => setCurrentTab(key)}
-              onEdit={onEdit}
-              hideAdd
-            />
-            <TabsContent>
-              {openedTabs.map(tab => (
+            <TabsHeader>
+              <Tabs
+                type="editable-card"
+                items={openedTabs}
+                activeKey={currentTab}
+                onChange={onChange}
+                onEdit={onEdit}
+                hideAdd
+              />
+            </TabsHeader>
+            <TabsContent ref={contentRef}>
+              {/* {openedTabs.map(tab => (
                 <iframe
                   src={tab.key}
                   key={tab.key}
@@ -127,7 +239,7 @@ const App: React.FC = () => {
                     visibility: currentTab === tab.key ? "visible" : "hidden",
                   }}
                 />
-              ))}
+              ))} */}
             </TabsContent>
           </TabsContainer>
         </Content>
