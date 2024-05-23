@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  UploadOutlined,
   UserOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
@@ -57,7 +56,7 @@ const menus: LinkMenu[] = [
   {
     key: "https://www.eeo.cn",
     icon: <UserOutlined />,
-    label: "EEO",
+    label: "翼鸥官网",
     group: "eeo",
     url: "https://www.eeo.cn",
     children: [
@@ -84,19 +83,19 @@ const menus: LinkMenu[] = [
   },
 
   {
-    key: "https://www.electronjs.org",
+    key: "https://www.camin.cn",
     icon: <VideoCameraOutlined />,
-    label: "Electron",
-    url: "https://www.electronjs.org",
-    group: "electron",
+    label: "CamIn",
+    url: "https://www.camin.cn",
+    group: "CamIn",
   },
-  {
-    key: "https://cn.bing.com",
-    icon: <UploadOutlined />,
-    label: "Bing",
-    url: "https://cn.bing.com",
-    group: "bing",
-  },
+  // {
+  //   key: "https://cn.bing.com",
+  //   icon: <UploadOutlined />,
+  //   label: "Bing",
+  //   url: "https://cn.bing.com",
+  //   group: "bing",
+  // },
 ];
 
 const App: React.FC = () => {
