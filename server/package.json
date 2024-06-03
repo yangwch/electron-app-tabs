@@ -2,7 +2,8 @@
   "name": "my-app",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/main.js",
+  "main": "server/main.js",
+  "productName": "FlowIn",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
@@ -26,6 +27,19 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "electron-is-dev": "^3.0.1",
     "electron-squirrel-startup": "^1.0.1"
+  },
+  "build": {
+    "appId": "iOS.FlowIn.desktop",
+    "productName": "FlowIn App",
+    "asar": false,
+    "files": [
+      "**/*",
+      "server/**/*",
+      "build/**/*",
+      "!out/**",
+      "!key/**"
+    ]
   }
 }

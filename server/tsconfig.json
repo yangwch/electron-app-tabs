@@ -4,7 +4,7 @@
     "target": "es2019",
     "noImplicitAny": false,
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./server",
     "baseUrl": ".",
     "paths": {
       "*": ["node_modules/*"]

@@ -5,6 +5,7 @@ const {
   WebContentsView,
   ipcMain,
 } = require("electron");
+const { isDev } = require('./utils/isDev')
 
 const path = require("node:path");
 
@@ -18,8 +19,12 @@ const createWindow = () => {
       preload: path.join(__dirname, "preload.js"),
     },
   });
-
-  win.loadURL("http://localhost:5555");
+  if (isDev) {
+    win.webContents.loadURL("http://localhost:5555");
+    win.webContents.openDevTools({ mode: "detach" });
+  } else {
+    win.webContents.loadFile("./dist/index.html");
+  }
   mainWindow = win;
   // const win = new BaseWindow({ width: 800, height: 400 })
 

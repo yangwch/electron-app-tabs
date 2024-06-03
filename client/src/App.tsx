@@ -106,7 +106,7 @@ const App: React.FC = () => {
 
   const contentRef = React.useRef<HTMLDivElement>(null);
 
-  const onClickMenu = (e: React.MouseEvent, info: LinkMenu) => {
+  const onClickMenu = (_: React.MouseEvent, info: LinkMenu) => {
     console.log("click", info);
     if (info) {
       const currentNode = info;

@@ -6,3 +6,8 @@ node_modules/
 .DS_Store
 .env
 .env.example
+
+client/dist
+server/server
+server/build
+server/out
