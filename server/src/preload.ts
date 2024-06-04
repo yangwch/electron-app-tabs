@@ -26,4 +26,11 @@ contextBridge.exposeInMainWorld("api", {
   }) => {
     ipcRenderer.invoke("resizeTabPage", layout);
   },
+
+  hideAllPages: () => {
+    ipcRenderer.invoke("hideAllPages");
+  },
+  closeAllPages: () => {
+    ipcRenderer.invoke("closeAllPages");
+  },
 });

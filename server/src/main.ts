@@ -5,7 +5,7 @@ const {
   WebContentsView,
   ipcMain,
 } = require("electron");
-const { isDev } = require('./utils/isDev')
+const { isDev } = require("./utils/isDev");
 
 const path = require("node:path");
 
@@ -20,23 +20,12 @@ const createWindow = () => {
     },
   });
   if (isDev) {
-    win.webContents.loadURL("http://localhost:5555");
+    win.webContents.loadURL("http://localhost.eeo.im:5174/drive/my");
     win.webContents.openDevTools({ mode: "detach" });
   } else {
     win.webContents.loadFile("./dist/index.html");
   }
   mainWindow = win;
-  // const win = new BaseWindow({ width: 800, height: 400 })
-
-  // const view1 = new WebContentsView()
-  // win.contentView.addChildView(view1)
-  // view1.webContents.loadURL('http://localhost:5555')
-  // view1.setBounds({ x: 0, y: 0, width: 400, height: 400 })
-
-  // const view2 = new WebContentsView()
-  // win.contentView.addChildView(view2)
-  // view2.webContents.loadURL('http://localhost:5555/page')
-  // view2.setBounds({ x: 400, y: 0, width: 400, height: 400 })
 };
 const setContentViewsVisible = (group: string) => {
   contentViews.forEach((view, key) => {
@@ -120,6 +109,19 @@ ipcMain.handle(
     });
   },
 );
+
+ipcMain.handle("hideAllPages", () => {
+  contentViews.forEach(view => {
+    view.setVisible(false);
+  });
+});
+
+ipcMain.handle("closeAllPages", () => {
+  contentViews.forEach(view => {
+    mainWindow.contentView.removeChildView(view);
+  });
+  contentViews.clear();
+});
 
 app.whenReady().then(() => {
   createWindow();
